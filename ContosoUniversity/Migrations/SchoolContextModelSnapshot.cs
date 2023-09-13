@@ -241,7 +241,8 @@ namespace ContosoUniversity.Migrations
                 {
                     b.Navigation("Enrollments");
                 });
+            )
 #pragma warning restore 612, 618
-        }
+        ;
     }
 }
