@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ContosoUniversity.Data
 {
-    public static class DbInitializer
+    public class DbInitializer
     {
         public static void Initialize(SchoolContext context)
         {

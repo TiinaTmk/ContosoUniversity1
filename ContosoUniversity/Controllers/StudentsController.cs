@@ -20,29 +20,40 @@ namespace ContosoUniversity.Controllers
         }
 
         // GET: Students
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string sortOrder)
         {
-              return View(await _context.Students.ToListAsync());
+            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
+            var students = from s in _context.Students
+                           select s;
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    students = students.OrderByDescending(s => s.LastName);
+                    break;
+                case "Date":
+                    students = students.OrderBy(s => s.EnrollmentDate);
+                    break;
+                case "date_desc":
+                    students = students.OrderByDescending(s => s.EnrollmentDate);
+                    break;
+                default:
+                    students = students.OrderBy(s => s.LastName);
+                    break;
+            }
+            return View(await students.AsNoTracking().ToListAsync());
         }
 
         // GET: Students/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null || _context.Students == null)
-            {
-                return NotFound();
-            }
 
             var student = await _context.Students
-                .FirstOrDefaultAsync(m => m.ID == id);
+            .Include(s => s.Enrollments)
+            .ThenInclude(e => e.Course)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.ID == id);
+
             if (student == null)
             {
-                return NotFound();
-            }
-
-            return View(student);
-        }
-
         // GET: Students/Create
         public IActionResult Create()
         {
