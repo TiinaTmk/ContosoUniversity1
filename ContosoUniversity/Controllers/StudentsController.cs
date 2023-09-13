@@ -1,65 +1,51 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ContosoUniversity.Data;
 using ContosoUniversity.Models;
-
 namespace ContosoUniversity.Controllers
 {
     public class StudentsController : Controller
     {
         private readonly SchoolContext _context;
-
         public StudentsController(SchoolContext context)
         {
             _context = context;
         }
-
         // GET: Students
-        public async Task<IActionResult> Index(string sortOrder)
+        public async Task<IActionResult> Index()
         {
-            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
-            ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
-            var students = from s in _context.Students
-                           select s;
-            switch (sortOrder)
-            {
-                case "name_desc":
-                    students = students.OrderByDescending(s => s.LastName);
-                    break;
-                case "Date":
-                    students = students.OrderBy(s => s.EnrollmentDate);
-                    break;
-                case "date_desc":
-                    students = students.OrderByDescending(s => s.EnrollmentDate);
-                    break;
-                default:
-                    students = students.OrderBy(s => s.LastName);
-                    break;
-            }
-            return View(await students.AsNoTracking().ToListAsync());
+            return _context.Students != null ?
+                        View(await _context.Students.ToListAsync()) :
+                        Problem("Entity set 'SchoolContext.Students'  is null.");
         }
-
         // GET: Students/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null || _context.Students == null)
+            {
+                return NotFound();
+            }
 
             var student = await _context.Students
-            .Include(s => s.Enrollments)
-            .ThenInclude(e => e.Course)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.ID == id);
+                .Include(s => s.Enrollments)
+                    .ThenInclude(e => e.Course)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.ID == id);
 
             if (student == null)
             {
+                return NotFound();
+            }
+            return View(student);
+        }
         // GET: Students/Create
         public IActionResult Create()
         {
             return View();
         }
-
         // POST: Students/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -75,7 +61,6 @@ namespace ContosoUniversity.Controllers
             }
             return View(student);
         }
-
         // GET: Students/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -83,7 +68,6 @@ namespace ContosoUniversity.Controllers
             {
                 return NotFound();
             }
-
             var student = await _context.Students.FindAsync(id);
             if (student == null)
             {
@@ -91,7 +75,6 @@ namespace ContosoUniversity.Controllers
             }
             return View(student);
         }
-
         // POST: Students/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -103,7 +86,6 @@ namespace ContosoUniversity.Controllers
             {
                 return NotFound();
             }
-
             if (ModelState.IsValid)
             {
                 try
@@ -126,7 +108,6 @@ namespace ContosoUniversity.Controllers
             }
             return View(student);
         }
-
         // GET: Students/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -134,17 +115,14 @@ namespace ContosoUniversity.Controllers
             {
                 return NotFound();
             }
-
             var student = await _context.Students
                 .FirstOrDefaultAsync(m => m.ID == id);
             if (student == null)
             {
                 return NotFound();
             }
-
             return View(student);
         }
-
         // POST: Students/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
@@ -159,14 +137,13 @@ namespace ContosoUniversity.Controllers
             {
                 _context.Students.Remove(student);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
         private bool StudentExists(int id)
         {
-          return _context.Students.Any(e => e.ID == id);
+            return (_context.Students?.Any(e => e.ID == id)).GetValueOrDefault();
         }
     }
 }
