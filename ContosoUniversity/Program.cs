@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 
 namespace ContosoUniversity
@@ -16,8 +17,16 @@ namespace ContosoUniversity
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(builder.Environment.ContentRootPath)
+                .AddJsonFile("appsettings.json")
+                .Build();
+
             // Add service to the container.
-            builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+            }
 
             builder.Services.AddControllersWithViews();
 
@@ -26,6 +35,8 @@ namespace ContosoUniversity
 
 
             var app = builder.Build();
+
+            CreateDbIfNotExists(app);
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
@@ -60,7 +71,11 @@ namespace ContosoUniversity
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
-            //app.CreateDbIfNotExists();
+            //var options = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>();
+            //app.UseRequestLocalization(options.Value);
+
+
+            // app.CreateDbIfNotExists();
 
             using (var scope = app.Services.CreateScope())
             {
