@@ -63,7 +63,11 @@ namespace ContosoUniversity.Migrations
                     .HasColumnType("datetime2");
                 b.Property<string>("FirstMidName")
                     .IsRequired()
-                    .HasColumnType("nvarchar(max)");
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)")
+                    .HasColumnName("FirstName");
+
+
                 b.Property<string>("LastName")
                     .IsRequired()
                     .HasColumnType("nvarchar(max)");
