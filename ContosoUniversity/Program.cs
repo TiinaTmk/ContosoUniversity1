@@ -1,5 +1,10 @@
 using ContosoUniversity.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 
 namespace ContosoUniversity
@@ -11,39 +16,33 @@ namespace ContosoUniversity
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add configuration.
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(builder.Environment.ContentRootPath)
-                .AddJsonFile("appsettings.json")
-                .Build();
+            // Add service to the container.
+            builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-   
-            // Configure services: register the SchoolContext as a service, specifying that it should use SQL Server as the database provider.
-            builder.Services.AddDbContext<SchoolContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-
-            // Add the database exception filter if the environment is in development mode
-            if (builder.Environment.IsDevelopment())
-            {
-                builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-            }
-            // Add services to the container.
             builder.Services.AddControllersWithViews();
 
-            // Building the Application.
+            builder.Services.AddDbContext<SchoolContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
             var app = builder.Build();
 
-            // Create a database and seed it with initial data
-            CreateDbIfNotExists(app);
-
-           
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
+
+            // The default HSTS value is 30 days.
+            app.UseHsts();
             }
+
+            else
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseMigrationsEndPoint();
+            }
+
+
             // Enable HTTPS redirection and serve static files like CSS, JavaScript, and image
             app.UseHttpsRedirection();
             app.UseStaticFiles();
@@ -61,13 +60,24 @@ namespace ContosoUniversity
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
-      
+            //app.CreateDbIfNotExists();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+
+                var context = services.GetRequiredService<SchoolContext>();
+                context.Database.EnsureCreated();
+                DbInitializer.Initialize(context);
+            }
+
+
             app.Run();
         }
-        private static void CreateDbIfNotExists(WebApplication app)
+            private static void CreateDbIfNotExists(IHost host)
         {
             //Creates a new scope within which you can resolve and use services.
-            using (var scope = app.Services.CreateScope())
+            using (var scope = host.Services.CreateScope())
             {
                 // This line retrieves the IServiceProvider from the created scope.
                 // The IServiceProvider is responsible for managing and providing access to registered services.
