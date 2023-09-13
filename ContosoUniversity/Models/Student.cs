@@ -29,7 +29,6 @@ namespace ContosoUniversity.Models
                 return LastName + ", " + FirstMidName;
             }
         }
-
         public ICollection<Enrollment> Enrollments { get; set; }
     }
 }
