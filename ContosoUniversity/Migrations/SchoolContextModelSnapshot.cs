@@ -68,6 +68,11 @@ namespace ContosoUniversity.Migrations
                     .IsRequired()
                     .HasMaxLength(50)
                     .HasColumnType("nvarchar(50)");
+                b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
                 b.Property<DateTime>("StartDate")
                     .HasColumnType("datetime2");
                 b.HasKey("DepartmentID");
