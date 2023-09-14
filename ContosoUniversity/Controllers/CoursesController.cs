@@ -31,7 +31,7 @@ namespace ContosoUniversity.Controllers
         // GET: Courses/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Courses == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -117,6 +117,7 @@ namespace ContosoUniversity.Controllers
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateException /* ex */) {
+                    ModelState.AddModelError("", "Unable to save changes. ");
 
                 }
                 return RedirectToAction(nameof(Index));
