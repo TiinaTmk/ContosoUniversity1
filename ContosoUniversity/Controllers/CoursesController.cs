@@ -113,69 +113,70 @@ namespace ContosoUniversity.Controllers
             {
                 try
                 {
-                   
+
                     await _context.SaveChangesAsync();
                 }
-                catch(DbUpdateException /* ex */)
-                
+                catch (DbUpdateException /* ex */) {
+
                 }
                 return RedirectToAction(nameof(Index));
             }
-            
 
-        PopulateDepartmentsDropDownList(courseToUpdate.DepartmentID);
+
+            PopulateDepartmentsDropDownList(courseToUpdate.DepartmentID);
             return View(courseToUpdate);
-    }
+        }
 
-    private void PopulateDepartmentsDropDownList(object selectedDepartment = null)
-    {
-        var departmentsQuery = from d in _context.Departments
-                               orderby d.Name
-                               select d;
-        ViewBag.DepartmentID = new SelectList(departmentsQuery.AsNoTracking(), "DepartmentID", "Name", selectedDepartment);
+        private void PopulateDepartmentsDropDownList(object selectedDepartment = null)
+        {
+            var departmentsQuery = from d in _context.Departments
+                                   orderby d.Name
+                                   select d;
+            ViewBag.DepartmentID = new SelectList(departmentsQuery.AsNoTracking(), "DepartmentID", "Name", selectedDepartment);
 
-        // GET: Courses/Delete/5
+            // GET: Courses/Delete/5
+        }
         public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null || _context.Courses == null)
             {
-                return NotFound();
+                if (id == null || _context.Courses == null)
+                {
+                    return NotFound();
+                }
+
+                var course = await _context.Courses
+                    .Include(c => c.Department)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(m => m.CourseID == id);
+                if (course == null)
+                {
+                    return NotFound();
+                }
+
+                return View(course);
             }
 
-            var course = await _context.Courses
-                .Include(c => c.Department)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.CourseID == id);
-            if (course == null)
+            // POST: Courses/Delete/5
+            [HttpPost, ActionName("Delete")]
+            [ValidateAntiForgeryToken]
+            public async Task<IActionResult> DeleteConfirmed(int id)
             {
-                return NotFound();
+                if (_context.Courses == null)
+                {
+                    return Problem("Entity set 'SchoolContext.Courses'  is null.");
+                }
+                var course = await _context.Courses.FindAsync(id);
+                if (course != null)
+                {
+                    _context.Courses.Remove(course);
+                }
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
 
-            return View(course);
+            private bool CourseExists(int id)
+            {
+                return (_context.Courses.Any(e => e.CourseID == id));
+            }
         }
-
-        // POST: Courses/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.Courses == null)
-            {
-                return Problem("Entity set 'SchoolContext.Courses'  is null.");
-            }
-            var course = await _context.Courses.FindAsync(id);
-            if (course != null)
-            {
-                _context.Courses.Remove(course);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool CourseExists(int id)
-        {
-            return (_context.Courses?.Any(e => e.CourseID == id)).GetValueOrDefault();
-        }
-    }
-}
+    } 

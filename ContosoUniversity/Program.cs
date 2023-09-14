@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
-
 namespace ContosoUniversity
 {
 
@@ -27,7 +26,6 @@ namespace ContosoUniversity
             {
                 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
             }
-
             builder.Services.AddControllersWithViews();
 
             builder.Services.AddDbContext<SchoolContext>(options =>
@@ -37,14 +35,13 @@ namespace ContosoUniversity
             var app = builder.Build();
 
             CreateDbIfNotExists(app);
-
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
 
-            // The default HSTS value is 30 days.
-            app.UseHsts();
+                // The default HSTS value is 30 days.
+                app.UseHsts();
             }
 
             else
@@ -54,22 +51,19 @@ namespace ContosoUniversity
             }
 
 
-            // Enable HTTPS redirection and serve static files like CSS, JavaScript, and image
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
-            
-            // Enable routing and authorization middleware.
-            // Routing is responsible for determining which controller and action should handle a given request,
-            // while authorization ensures that users have the necessary permissions to access certain resources.
+
             app.UseRouting();
+
             app.UseAuthorization();
 
-            
             // Map default controller route
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+
 
             //var options = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>();
             //app.UseRequestLocalization(options.Value);
@@ -86,24 +80,21 @@ namespace ContosoUniversity
                 DbInitializer.Initialize(context);
             }
 
-
             app.Run();
+
         }
-            private static void CreateDbIfNotExists(IHost host)
+        private static void CreateDbIfNotExists(IHost host)
         {
             //Creates a new scope within which you can resolve and use services.
             using (var scope = host.Services.CreateScope())
             {
-                // This line retrieves the IServiceProvider from the created scope.
-                // The IServiceProvider is responsible for managing and providing access to registered services.
+
                 var services = scope.ServiceProvider;
                 try
                 {
-                    // Requesting an instance of the SchoolContext class from the service provider.
-                    // The GetRequiredService method is used to retrieve a service of a specific type. 
+
                     var context = services.GetRequiredService<SchoolContext>();
-                    //Assuming that context now holds an instance of SchoolContext, this line calls the DbInitializer.Initialize method
-                    //and passes the SchoolContext instance as an argument. This is where the actual database initialization and seed data insertion occur.
+
                     DbInitializer.Initialize(context);
                 }
                 catch (Exception ex)
